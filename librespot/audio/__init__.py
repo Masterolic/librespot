@@ -361,7 +361,7 @@ class CdnFeedHelper:
         }
         resp = session.client().head(episode.external_url,headers=headers)
         
-        if resp.status_code != 200:
+        if resp.status_code not in [200, 302]:
             CdnFeedHelper._LOGGER.warning(f"Couldn't resolve redirect! {resp.status_code}")
         if resp.status_code != 302:
            url = resp.headers["location"]
