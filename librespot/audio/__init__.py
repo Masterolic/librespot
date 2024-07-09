@@ -629,11 +629,13 @@ class CdnManager:
             if chunk is not None:
                 range_start = ChannelManager.chunk_size * chunk
                 range_end = (chunk + 1) * ChannelManager.chunk_size - 1
+            headers = {
+            "Range": "bytes={}-{}".format(range_start, range_end),
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+            }
             response = self.__session.client().get(
                 self.__cdn_url.url,
-                headers={
-                    "Range": "bytes={}-{}".format(range_start, range_end)
-                },
+                headers=headers,
             )
             if response.status_code != 206:
                 raise IOError(response.status_code)
