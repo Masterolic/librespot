@@ -357,9 +357,9 @@ class CdnFeedHelper:
             session: Session, episode: Metadata.Episode,
             halt_listener: HaltListener) -> PlayableContentFeeder.LoadedStream:
         resp = session.client().head(episode.external_url)
-
+        
         if resp.status_code != 200:
-            CdnFeedHelper._LOGGER.warning("Couldn't resolve redirect!")
+            CdnFeedHelper._LOGGER.warning(f"Couldn't resolve redirect! {resp.status_code}")
 
         url = resp.url
         CdnFeedHelper._LOGGER.debug("Fetched external url for {}: {}".format(
