@@ -356,12 +356,17 @@ class CdnFeedHelper:
     def load_episode_external(
             session: Session, episode: Metadata.Episode,
             halt_listener: HaltListener) -> PlayableContentFeeder.LoadedStream:
-        resp = session.client().head(episode.external_url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+        }
+        resp = session.client().head(episode.external_url,headers=headers)
         
         if resp.status_code != 200:
             CdnFeedHelper._LOGGER.warning(f"Couldn't resolve redirect! {resp.status_code}")
-
-        url = resp.url
+        if resp.status_code != 302:
+           url = resp.headers["location"]
+        else:
+             url = resp.url
         CdnFeedHelper._LOGGER.debug("Fetched external url for {}: {}".format(
             util.bytes_to_hex(episode.gid), url))
 
