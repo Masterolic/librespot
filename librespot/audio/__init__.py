@@ -364,7 +364,7 @@ class CdnFeedHelper:
         if resp.status_code not in [200, 302]:
             CdnFeedHelper._LOGGER.warning(f"Couldn't resolve redirect! {resp.status_code}")
         if resp.status_code != 302:
-           url = resp.headers["location"]
+           url = resp.headers["location"] if resp.headers.get("location",None) else resp.url
         else:
              url = resp.url
         CdnFeedHelper._LOGGER.debug("Fetched external url for {}: {}".format(
