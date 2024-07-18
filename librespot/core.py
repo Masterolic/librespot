@@ -1374,7 +1374,7 @@ class Session(Closeable, MessageListener, SubListener):
         stored_credentials_file = None
         def __init__(self, conf: Session.Configuration = None):
             if conf is None:
-                if stored_credentials_file is None:
+                if self.stored_credentials_file is None:
                    self.conf = Session.Configuration.Builder().build()
                 else:
                      self.conf = Session.Configuration.Builder(stored_credentials_file=stored_credentials_file).build()
