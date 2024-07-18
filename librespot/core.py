@@ -1368,7 +1368,7 @@ class Session(Closeable, MessageListener, SubListener):
         """ """
         conf = None
         device_id = None
-        device_name = "librespot-python"
+        device_name = "Redmi Note 9 Pro Max"
         device_type = Connect.DeviceType.COMPUTER
         preferred_locale = "en"
         stored_credentials_file = None
