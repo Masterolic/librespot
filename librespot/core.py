@@ -1621,6 +1621,7 @@ class Session(Closeable, MessageListener, SubListener):
             :returns: Session instance
 
             """
+            self.stored_credentials_file = path 
             if self.login_credentials is None:
                 raise RuntimeError("You must select an authentication method.")
             session = Session(
