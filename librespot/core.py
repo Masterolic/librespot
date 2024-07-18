@@ -1368,16 +1368,13 @@ class Session(Closeable, MessageListener, SubListener):
         """ """
         conf = None
         device_id = None
-        device_name = "Redmi Note 9 Pro Max"
+        device_name = "librespot-python"
         device_type = Connect.DeviceType.COMPUTER
         preferred_locale = "en"
-        stored_credentials_file = None
+
         def __init__(self, conf: Session.Configuration = None):
             if conf is None:
-                if self.stored_credentials_file is None:
-                   self.conf = Session.Configuration.Builder().build()
-                else:
-                     self.conf = Session.Configuration.Builder(stored_credentials_file=stored_credentials_file).build()
+                self.conf = Session.Configuration.Builder().build()
             else:
                 self.conf = conf
 
@@ -1597,13 +1594,8 @@ class Session(Closeable, MessageListener, SubListener):
                     except KeyError:
                         pass
             return self
-                            
-        @classmethod
-        def path(cls, path=None):
-            if not path is None:
-               cls.stored_credentials_file = path
-                
-        def user_pass(self, username: str, password: str, path=None) -> Session.Builder:
+
+        def user_pass(self, username: str, password: str) -> Session.Builder:
             """Create credential from username and password
 
             :param username: Spotify's account username
@@ -1619,14 +1611,13 @@ class Session(Closeable, MessageListener, SubListener):
             )
             return self
 
-        def create(self, path="credentials.json") -> Session:
+        def create(self) -> Session:
             """Create the Session instance
 
 
             :returns: Session instance
 
             """
-
             if self.login_credentials is None:
                 raise RuntimeError("You must select an authentication method.")
             session = Session(
