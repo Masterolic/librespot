@@ -1597,7 +1597,12 @@ class Session(Closeable, MessageListener, SubListener):
                     except KeyError:
                         pass
             return self
-
+                            
+        @classmethod
+        def path(cls, path=None):
+            if not path is None:
+               cls.stored_credentials_file = path
+                
         def user_pass(self, username: str, password: str, path=None) -> Session.Builder:
             """Create credential from username and password
 
@@ -1607,8 +1612,6 @@ class Session(Closeable, MessageListener, SubListener):
             :returns: Builder
 
             """
-            if not path is None:
-               self.AbsBuilder.stored_credentials_file = path 
             self.login_credentials = Authentication.LoginCredentials(
                 username=username,
                 typ=Authentication.AuthenticationType.AUTHENTICATION_USER_PASS,
