@@ -1371,10 +1371,13 @@ class Session(Closeable, MessageListener, SubListener):
         device_name = "librespot-python"
         device_type = Connect.DeviceType.COMPUTER
         preferred_locale = "en"
-
+        stored_credentials_file = None
         def __init__(self, conf: Session.Configuration = None):
             if conf is None:
-                self.conf = Session.Configuration.Builder().build()
+                if stored_credentials_file is None:
+                   self.conf = Session.Configuration.Builder().build()
+                else:
+                     self.conf = Session.Configuration.Builder(stored_credentials_file=stored_credentials_file).build()
             else:
                 self.conf = conf
 
