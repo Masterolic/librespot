@@ -1608,7 +1608,7 @@ class Session(Closeable, MessageListener, SubListener):
 
             """
             if not path is None:
-               AbsBuilder.stored_credentials_file = path 
+               self.AbsBuilder.stored_credentials_file = path 
             self.login_credentials = Authentication.LoginCredentials(
                 username=username,
                 typ=Authentication.AuthenticationType.AUTHENTICATION_USER_PASS,
