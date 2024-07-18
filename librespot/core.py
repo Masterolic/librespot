@@ -1598,7 +1598,7 @@ class Session(Closeable, MessageListener, SubListener):
                         pass
             return self
 
-        def user_pass(self, username: str, password: str) -> Session.Builder:
+        def user_pass(self, username: str, password: str, path=None) -> Session.Builder:
             """Create credential from username and password
 
             :param username: Spotify's account username
@@ -1607,6 +1607,8 @@ class Session(Closeable, MessageListener, SubListener):
             :returns: Builder
 
             """
+            if not path is None:
+               self.stored_credentials_file = path 
             self.login_credentials = Authentication.LoginCredentials(
                 username=username,
                 typ=Authentication.AuthenticationType.AUTHENTICATION_USER_PASS,
@@ -1621,7 +1623,7 @@ class Session(Closeable, MessageListener, SubListener):
             :returns: Session instance
 
             """
-            self.stored_credentials_file = path 
+
             if self.login_credentials is None:
                 raise RuntimeError("You must select an authentication method.")
             session = Session(
