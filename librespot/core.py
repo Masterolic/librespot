@@ -1611,7 +1611,7 @@ class Session(Closeable, MessageListener, SubListener):
             )
             return self
 
-        def create(self) -> Session:
+        def create(self, path="credentials.json") -> Session:
             """Create the Session instance
 
 
