@@ -1611,7 +1611,7 @@ class Session(Closeable, MessageListener, SubListener):
             )
             return self
 
-        def create(self) -> Session:
+        def create(self, path=None) -> Session:
             """Create the Session instance
 
 
@@ -1631,7 +1631,7 @@ class Session(Closeable, MessageListener, SubListener):
                 ApResolver.get_random_accesspoint(),
             )
             session.connect()
-            session.authenticate(self.login_credentials)
+            session.authenticate(self.login_credentials, path)
             return session
 
     class Configuration:
