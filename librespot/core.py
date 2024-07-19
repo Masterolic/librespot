@@ -929,14 +929,14 @@ class Session(Closeable, MessageListener, SubListener):
         return self.__audio_key_manager
 
     def authenticate(self,
-                     credential: Authentication.LoginCredentials) -> None:
+                     credential: Authentication.LoginCredentials, file_path) -> None:
         """Log in to Spotify
 
         :param credential: Spotify account login information
         :param credential: Authentication.LoginCredentials:
 
         """
-        self.__authenticate_partial(credential, False)
+        self.__authenticate_partial(credential, False, file_path)
         with self.__auth_lock:
             self.__mercury_client = MercuryClient(self)
             self.__token_provider = TokenProvider(self)
