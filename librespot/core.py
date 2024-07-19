@@ -1279,12 +1279,16 @@ class Session(Closeable, MessageListener, SubListener):
 
     def __authenticate_partial(self,
                                credential: Authentication.LoginCredentials,
-                               remove_lock: bool) -> None:
+                               remove_lock: bool, path=None) -> None:
         """
         Login to Spotify
         Args:
             credential: Spotify account login information
         """
+        if path:
+            inner_file = path
+        else:
+            inner_file = self.__inner.conf.stored_credentials_file
         if self.cipher_pair is None:
             raise RuntimeError("Connection not established!")
         client_response_encrypted_proto = Authentication.ClientResponseEncrypted(
@@ -1333,7 +1337,7 @@ class Session(Closeable, MessageListener, SubListener):
                         "type":
                         reusable_type,
                     }).encode()).decode()
-                with open(self.__inner.conf.stored_credentials_file, "w") as f:
+                with open(inner_file, "w") as f:
                     json.dump(
                         {
                             "username": self.__ap_welcome.canonical_username,
