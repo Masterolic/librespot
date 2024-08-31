@@ -280,7 +280,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                    bool_val = False
                 else:
                      bool_val = True 
-                delay = threading.Thread(target = delay_for, args=(5))
+                delay = threading.Thread(target = self.delay_for, args=(5))
                 delay.start()
                 delay.join()
                 return self.get_audio_key(gid, file_id, bool_val, no+1)
