@@ -234,7 +234,8 @@ class AudioKeyManager(PacketsReceiver, Closeable):
 
     def __init__(self, session: Session):
         self.__session = session
-
+   def delay_for(self, value = 5):
+       time.sleep(value)
     def dispatch(self, packet: Packet) -> None:
         payload = io.BytesIO(packet.payload)
         seq = struct.unpack(">i", payload.read(4))[0]
@@ -257,7 +258,8 @@ class AudioKeyManager(PacketsReceiver, Closeable):
     def get_audio_key(self,
                       gid: bytes,
                       file_id: bytes,
-                      retry: bool = True) -> bytes:
+                      retry: bool = True,
+                      no = 0) -> bytes:
         seq: int
         with self.__seq_holder_lock:
             seq = self.__seq_holder
@@ -274,7 +276,14 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         key = callback.wait_response()
         if key is None:
             if retry:
-                return self.get_audio_key(gid, file_id, False)
+                if no > 5:
+                   bool_val = False
+                else:
+                     bool_val = True 
+                delay = threading.Thread(target = delay_for, args=(5))
+                delay.start()
+                delay.join()
+                return self.get_audio_key(gid, file_id, bool_val, no+1)
             raise RuntimeError(
                 "Failed fetching audio key! gid: {}, fileId: {}".format(
                     util.bytes_to_hex(gid), util.bytes_to_hex(file_id)))
