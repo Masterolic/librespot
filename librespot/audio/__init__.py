@@ -234,7 +234,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
 
     def __init__(self, session: Session):
         self.__session = session
-   def delay_for(self, value = 5):
+    def delay_for(self, value=5):
        time.sleep(value)
     def dispatch(self, packet: Packet) -> None:
         payload = io.BytesIO(packet.payload)
