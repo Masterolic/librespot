@@ -302,8 +302,9 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                 self.__reference_lock.notify_all()
 
         def error(self, code: int) -> None:
-            self.__audio_key_manager.logger.fatal(
-                "Audio key error, code: {}".format(code))
+            if not code == 2:
+               self.__audio_key_manager.logger.fatal(
+                  "Audio key error, code: {}".format(code))
             with self.__reference_lock:
                 self.__reference.put(None)
                 self.__reference_lock.notify_all()
