@@ -5,4 +5,4 @@ pyogg==0.6.14a.1
 requests==2.32.3
 websocket-client==1.8.0
 zeroconf==0.132.2
-https://github.com/devine-dl/pywidevine/archive/refs/tags/v1.5.0.zip
+https://github.com/devine-dl/pywidevine/archive/refs/tags/v1.4.4.zip
