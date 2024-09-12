@@ -296,7 +296,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         return key
         
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
-        rand_id = random.choice(1, 0)
+        rand_id = random.choice([1, 0])
         if rand_id == 0:
            try:
                key = get_key(gid, file_id, retry = True)
