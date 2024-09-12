@@ -299,17 +299,17 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         rand_id = random.choice([1, 0])
         if rand_id == 0:
            try:
-               key = get_key(gid, file_id, retry = True)
+               key = self.get_key(gid, file_id, retry = True)
                return key 
            except Exception:
-               key = seek_key(gid, file_id, retry = True)
+               key = self.seek_key(gid, file_id, retry = True)
                return key
         else:
              try:
-                 key = seek_key(gid, file_id, retry = True)
+                 key = self.seek_key(gid, file_id, retry = True)
                  return key 
              except Exception:
-                 key = get_key(gid, file_id, retry = True)
+                 key = self.get_key(gid, file_id, retry = True)
                  return key
 
     class Callback:
