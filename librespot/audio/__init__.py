@@ -297,10 +297,10 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
         try:
-            key = self.seek_key(gid, file_id, retry = True)
+            key = self.get_key(gid, file_id, retry = True)
             return key 
         except Exception:
-            key = self.get_key(gid, file_id, retry = True)
+            key = self.seek_key(gid, file_id, retry = True)
             return key
 
     class Callback:
