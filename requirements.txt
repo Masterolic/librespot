@@ -3,5 +3,6 @@ protobuf==3.20.1
 pycryptodomex==3.20.0
 pyogg==0.6.14a.1
 requests==2.32.3
+idna==3.8
 websocket-client==1.8.0
 zeroconf==0.135.0
