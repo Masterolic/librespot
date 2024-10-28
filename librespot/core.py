@@ -1206,8 +1206,8 @@ class Session(Closeable, MessageListener, SubListener):
             return
         for i in range(len(product)):
             self.__user_attributes[product[i].tag] = product[i].text
-        self.logger.debug("Parsed product info: {}".format(
-            self.__user_attributes))
+     #   self.logger.debug("Parsed product info: {}".format(
+       #     self.__user_attributes))
 
     def preferred_locale(self) -> str:
         """ """
