@@ -1868,10 +1868,7 @@ class Session(Closeable, MessageListener, SubListener):
             try:
                 sock.connect((ap_address, ap_port))
             except Exception:
-                try:
-                    sock.connect(("ap-guc3.spotify.com", 4070))
-                except Exception:
-                    sock.connect(("ap-gew1.spotify.com", 443))
+                sock.connect((ap_address, ap_port))
             return Session.ConnectionHolder(sock)
 
         def close(self) -> None:
