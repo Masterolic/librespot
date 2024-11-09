@@ -2012,7 +2012,10 @@ class Session(Closeable, MessageListener, SubListener):
                             format(util.bytes_to_hex(packet.cmd),
                                    packet.payload))
                         continue
-                except (RuntimeError, ConnectionResetError) as ex:
+                except (RuntimeError, OSError, ConnectionResetError) as ex:
+                    if isinstance(ex, OSError):
+                       if not ex.errno == errno.EBADF:
+                          raise
                     if self.__running:
                         self.__session.logger.fatal(
                             "Failed reading packet! {}".format(ex))
