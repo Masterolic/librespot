@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import errno
 import base64
 import binascii
 import concurrent.futures
