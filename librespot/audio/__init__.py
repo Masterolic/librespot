@@ -386,7 +386,7 @@ class CdnFeedHelper:
         headers = {
             "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
         }
-        resp = session.client().head(episode.external_url,headers=headers)
+        resp = session.client().get(episode.external_url,headers=headers)
         
         if resp.status_code not in [200, 302]:
             CdnFeedHelper._LOGGER.warning(f"Couldn't resolve redirect! {resp.status_code}")
@@ -396,7 +396,7 @@ class CdnFeedHelper:
              url = resp.url
         CdnFeedHelper._LOGGER.debug("Fetched external url for {}: {}".format(
             util.bytes_to_hex(episode.gid), url))
-
+                
         streamer = session.cdn().stream_external_episode(
             episode, url, halt_listener)
         return PlayableContentFeeder.LoadedStream(
