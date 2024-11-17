@@ -2012,8 +2012,8 @@ class Session(Closeable, MessageListener, SubListener):
                             format(util.bytes_to_hex(packet.cmd),
                                    packet.payload))
                         continue
-                except (RuntimeError, OSError, ConnectionResetError) as ex:
-                    if isinstance(ex, OSError):
+                except (ConnectionResetError, RuntimeError, OSError) as ex:
+                    if type(ex) == OSError:
                        if ex.errno != errno.EBADF:
                           raise
                     if self.__running:
