@@ -2075,7 +2075,7 @@ class Session(Closeable, MessageListener, SubListener):
                 elif cmd == Packet.Type.product_info:
                     self.__session.parse_product_info(packet.payload)
                 else:
-                    self.__session.logger.info("Skipping {}".format(
+                    self.__session.logger.info("Skipping finnal jsjjdd {}".format(
                         util.bytes_to_hex(cmd)))
 
     class SpotifyAuthenticationException(Exception):
