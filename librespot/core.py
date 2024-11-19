@@ -2019,7 +2019,8 @@ class Session(Closeable, MessageListener, SubListener):
                     if self.__running:
                         self.__session.logger.fatal(
                             "Failed reading packet! {}".format(ex))
-                        self.__session.reconnect()
+                        if not isinstance(ex, ConnectionResetError):
+                           self.__session.reconnect()
                     break
                 if not self.__running:
                     break
