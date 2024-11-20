@@ -1873,7 +1873,7 @@ class Session(Closeable, MessageListener, SubListener):
             """
             ap_address = address.split(":")[0]
             ap_port = int(address.split(":")[1])
-            sock = socket.socket()
+            sock = self.__socket #socket.socket()
             try:
                 sock.connect((ap_address, ap_port))
             except Exception:
