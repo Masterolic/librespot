@@ -2013,14 +2013,12 @@ class Session(Closeable, MessageListener, SubListener):
                                    packet.payload))
                         continue
                 except (ConnectionResetError, RuntimeError, OSError) as ex:
-                    if type(ex) == OSError:
-                       if ex.errno != errno.EBADF:
-                          raise
+                    self.stop()
+                    break 
                     if self.__running:
                         self.__session.logger.fatal(
                             "Failed reading packet! {}".format(ex))
-                        if not isinstance(ex, ConnectionResetError):
-                           self.__session.reconnect()
+                        self.__session.reconnect()
                     break
                 if not self.__running:
                     break
