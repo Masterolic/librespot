@@ -628,8 +628,8 @@ class CdnManager:
                         cached: bool) -> None:
             if self.__internal_stream.is_closed():
                 return
-            if (new_chunk_index := chunk_index + 1) % 10 == 0 or new_chunk_index == self.chunks:
-               self.__session.logger.debug(
+         #   if (new_chunk_index := chunk_index + 1) % 10 == 0 or new_chunk_index == self.chunks:
+            self.__session.logger.debug(
                   "Chunk {}/{} completed, cached: {}, stream: {}".format(
                     new_chunk_index , self.chunks, cached, self.describe()))
             self.buffer[chunk_index] = self.__audio_decrypt.decrypt_chunk(
