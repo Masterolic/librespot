@@ -2012,9 +2012,10 @@ class Session(Closeable, MessageListener, SubListener):
                             format(util.bytes_to_hex(packet.cmd),
                                    packet.payload))
                         continue
-                except (ConnectionResetError, RuntimeError, OSError) as ex:
-                    self.stop()
-                    break 
+                except (RuntimeError, OSError, ConnectionResetError) as ex:
+                    if isinstance(ex, OSError):
+                       if not ex.errno == errno.EBADF:
+                          raise
                     if self.__running:
                         self.__session.logger.fatal(
                             "Failed reading packet! {}".format(ex))
@@ -2074,7 +2075,7 @@ class Session(Closeable, MessageListener, SubListener):
                 elif cmd == Packet.Type.product_info:
                     self.__session.parse_product_info(packet.payload)
                 else:
-                    self.__session.logger.info("Skipping finnal jsjjdd {}".format(
+                    self.__session.logger.info("Skipping {}".format(
                         util.bytes_to_hex(cmd)))
 
     class SpotifyAuthenticationException(Exception):
