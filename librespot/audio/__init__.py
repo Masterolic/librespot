@@ -396,7 +396,7 @@ class CdnFeedHelper:
              url = resp.url
         CdnFeedHelper._LOGGER.debug("Fetched external url for {}: {}".format(
             util.bytes_to_hex(episode.gid), url))
-                
+
         streamer = session.cdn().stream_external_episode(
             episode, url, halt_listener)
         return PlayableContentFeeder.LoadedStream(
@@ -628,10 +628,9 @@ class CdnManager:
                         cached: bool) -> None:
             if self.__internal_stream.is_closed():
                 return
-         #   if (new_chunk_index := chunk_index + 1) % 10 == 0 or new_chunk_index == self.chunks:
             self.__session.logger.debug(
-                  "Chunk {}/{} completed, cached: {}, stream: {}".format(
-                    new_chunk_index , self.chunks, cached, self.describe()))
+                "Chunk {}/{} completed, cached: {}, stream: {}".format(
+                    chunk_index + 1, self.chunks, cached, self.describe()))
             self.buffer[chunk_index] = self.__audio_decrypt.decrypt_chunk(
                 chunk_index, chunk)
             self.__internal_stream.notify_chunk_available(chunk_index)
