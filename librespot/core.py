@@ -2014,7 +2014,7 @@ class Session(Closeable, MessageListener, SubListener):
                         continue
                 except (RuntimeError, OSError, ConnectionResetError) as ex:
                     if isinstance(ex, OSError):
-                       if not ex.errno == errno.EBADF:
+                       if ex.errno != errno.EBADF:
                           raise
                     if self.__running:
                         self.__session.logger.fatal(
