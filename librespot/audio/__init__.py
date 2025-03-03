@@ -92,7 +92,7 @@ class AbsChunkedInputStream(io.BytesIO, HaltListener):
         if n < k:
             k = n
         self.__pos += k
-        chunk = int(self.__pos / (128 * 1024))
+        chunk = int(self.__pos / (1024 * 1024))
         self.check_availability(chunk, False, False)
         return k
 
@@ -151,6 +151,7 @@ class AbsChunkedInputStream(io.BytesIO, HaltListener):
                 self.check_availability(chunk, True, True)
 
     def read(self, __size: int = 0) -> bytes:
+        read_chunk_size = 1024
         if self.closed:
             raise IOError("Stream is closed!")
         if __size <= 0:
@@ -158,9 +159,9 @@ class AbsChunkedInputStream(io.BytesIO, HaltListener):
                 return b""
             buffer = io.BytesIO()
             total_size = self.size()
-            chunk = int(self.__pos / (128 * 1024))
-            chunk_off = int(self.__pos % (128 * 1024))
-            chunk_total = int(math.ceil(total_size / (128 * 1024)))
+            chunk = int(self.__pos / (read_chunk_size * 1024))
+            chunk_off = int(self.__pos % (read_chunk_size * 1024))
+            chunk_total = int(math.ceil(total_size / (read_chunk_size * 1024)))
             self.check_availability(chunk, True, False)
             buffer.write(self.buffer()[chunk][chunk_off:])
             chunk += 1
@@ -173,13 +174,13 @@ class AbsChunkedInputStream(io.BytesIO, HaltListener):
             self.__pos += buffer.getbuffer().nbytes
             return buffer.read()
         buffer = io.BytesIO()
-        chunk = int(self.__pos / (128 * 1024))
-        chunk_off = int(self.__pos % (128 * 1024))
-        chunk_end = int(__size / (128 * 1024))
-        chunk_end_off = int(__size % (128 * 1024))
+        chunk = int(self.__pos / (read_chunk_size * 1024))
+        chunk_off = int(self.__pos % (read_chunk_size * 1024))
+        chunk_end = int(__size / (read_chunk_size * 1024))
+        chunk_end_off = int(__size % (read_chunk_size * 1024))
         if chunk_end > self.size():
-            chunk_end = int(self.size() / (128 * 1024))
-            chunk_end_off = int(self.size() % (128 * 1024))
+            chunk_end = int(self.size() / (read_chunk_size * 1024))
+            chunk_end_off = int(self.size() % (read_chunk_size * 1024))
         self.check_availability(chunk, True, False)
         if chunk_off + __size > len(self.buffer()[chunk]):
             buffer.write(self.buffer()[chunk][chunk_off:])
@@ -315,31 +316,33 @@ class AudioKeyManager(PacketsReceiver, Closeable):
             raise NotImplementedError
 
     class SyncCallback(Callback):
-        __audio_key_manager: AudioKeyManager
-        __reference = queue.Queue()
-        __reference_lock = threading.Condition()
+          __audio_key_manager: AudioKeyManager
+          __reference = queue.Queue()
+          __reference_lock = threading.Condition()
 
-        def __init__(self, audio_key_manager: AudioKeyManager):
-            self.__audio_key_manager = audio_key_manager
+          def __init__(self, audio_key_manager: AudioKeyManager):
+              self.__audio_key_manager = audio_key_manager
 
-        def key(self, key: bytes) -> None:
-            with self.__reference_lock:
-                self.__reference.put(key)
-                self.__reference_lock.notify_all()
+          def key(self, key: bytes) -> None:
+              with self.__reference_lock:
+                   self.__reference.put(key)
+                   self.__reference_lock.notify_all()  # Wake up waiting threads
 
-        def error(self, code: int) -> None:
-            if not code == 2:
-               self.__audio_key_manager.logger.fatal(
-                  "Audio key error, code: {}".format(code))
-            with self.__reference_lock:
-                self.__reference.put(None)
-                self.__reference_lock.notify_all()
+          def error(self, code: int) -> None:
+              if code != 2:
+                 self.__audio_key_manager.logger.fatal(
+                 "Audio key error, code: {}".format(code))
+              with self.__reference_lock:
+                   self.__reference.put(None)
+                   self.__reference_lock.notify_all()  # Wake up waiting threads
 
-        def wait_response(self) -> bytes:
-            with self.__reference_lock:
-                self.__reference_lock.wait(
-                    AudioKeyManager.audio_key_request_timeout)
-                return self.__reference.get(block=False)
+          def wait_response(self) -> bytes:
+              with self.__reference_lock:
+                   while self.__reference.empty():  # Prevent spurious wake-ups
+                        self.__reference_lock.wait(AudioKeyManager.audio_key_request_timeout)
+                        if self.__reference.empty():
+                           raise Exception("Failed To receive key") # Return None if timeout happens
+                   return self.__reference.get(block=False)  # Get the item safely
 
 
 class CdnFeedHelper:
