@@ -315,31 +315,33 @@ class AudioKeyManager(PacketsReceiver, Closeable):
             raise NotImplementedError
 
     class SyncCallback(Callback):
-        __audio_key_manager: AudioKeyManager
-        __reference = queue.Queue()
-        __reference_lock = threading.Condition()
+          __audio_key_manager: AudioKeyManager
+          __reference = queue.Queue()
+          __reference_lock = threading.Condition()
 
-        def __init__(self, audio_key_manager: AudioKeyManager):
-            self.__audio_key_manager = audio_key_manager
+          def __init__(self, audio_key_manager: AudioKeyManager):
+              self.__audio_key_manager = audio_key_manager
 
-        def key(self, key: bytes) -> None:
-            with self.__reference_lock:
-                self.__reference.put(key)
-                self.__reference_lock.notify_all()
+          def key(self, key: bytes) -> None:
+              with self.__reference_lock:
+                   self.__reference.put(key)
+                   self.__reference_lock.notify_all()  # Wake up waiting threads
 
-        def error(self, code: int) -> None:
-            if not code == 2:
-               self.__audio_key_manager.logger.fatal(
-                  "Audio key error, code: {}".format(code))
-            with self.__reference_lock:
-                self.__reference.put(None)
-                self.__reference_lock.notify_all()
+          def error(self, code: int) -> None:
+              if code != 2:
+                 self.__audio_key_manager.logger.fatal(
+                 "Audio key error, code: {}".format(code))
+              with self.__reference_lock:
+                   self.__reference.put(None)
+                   self.__reference_lock.notify_all()  # Wake up waiting threads
 
-        def wait_response(self) -> bytes:
-            with self.__reference_lock:
-                self.__reference_lock.wait(
-                    AudioKeyManager.audio_key_request_timeout)
-                return self.__reference.get(block=False)
+          def wait_response(self) -> bytes:
+              with self.__reference_lock:
+                   while self.__reference.empty():  # Prevent spurious wake-ups
+                        self.__reference_lock.wait(AudioKeyManager.audio_key_request_timeout)
+                        if self.__reference.empty():
+                           raise Exception("Failed To receive key") # Return None if timeout happens
+                   return self.__reference.get(block=False)  # Get the item safely
 
 
 class CdnFeedHelper:
