@@ -81,7 +81,7 @@ class AbsChunkedInputStream(io.BytesIO, HaltListener):
         if self.closed:
             raise IOError("Stream is closed!")
         self.__pos = where
-        self.check_availability(int(self.__pos / (128 * 1024)), False, False)
+        self.check_availability(int(self.__pos / (1024 * 1024)), False, False)
 
     def skip(self, n: int) -> int:
         if n < 0:
