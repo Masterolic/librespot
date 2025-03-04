@@ -304,7 +304,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
             key = self.get_key(gid, file_id, retry = True)
             return key 
         except Exception:
-            key = self.seek_key(gid, file_id, retry = True)
+            key = self.get_key(gid, file_id, retry = True)
             return key
 
     class Callback:
@@ -340,8 +340,10 @@ class AudioKeyManager(PacketsReceiver, Closeable):
               with self.__reference_lock:
                    while self.__reference.empty():  # Prevent spurious wake-ups
                         self.__reference_lock.wait(AudioKeyManager.audio_key_request_timeout)
+                        time.sleep(5)
                         if self.__reference.empty():
-                           raise Exception("Failed To receive key") # Return None if timeout happens
+                           return None
+                          #  raise Exception("Failed To receive key") # Return None if timeout happens
                    return self.__reference.get(block=False)  # Get the item safely
 
 
