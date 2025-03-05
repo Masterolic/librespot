@@ -866,7 +866,7 @@ class MessageType(enum.Enum):
 class Session(Closeable, MessageListener, SubListener):
     """ """
     cipher_pair: typing.Union[CipherPair, None]
-    country_code: str = "EN"
+    country_code: str = "IN"
     connection: typing.Union[ConnectionHolder, None]
     logger = logging.getLogger("Librespot:Session")
     scheduled_reconnect: typing.Union[sched.Event, None] = None
