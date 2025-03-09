@@ -20,7 +20,7 @@ import threading
 import time
 import typing
 import urllib.parse
-read_lock = Lock
+read_lock = Lock()
 if typing.TYPE_CHECKING:
     from librespot.core import Session
 
