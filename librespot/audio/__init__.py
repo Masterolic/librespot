@@ -9,6 +9,7 @@ from librespot.metadata import EpisodeId, PlayableId, TrackId
 from librespot.proto import Metadata_pb2 as Metadata, StorageResolve_pb2 as StorageResolve
 from librespot.structure import AudioDecrypt, AudioQualityPicker, Closeable, FeederException, GeneralAudioStream, GeneralWritableStream, HaltListener, NoopAudioDecrypt, PacketsReceiver
 import concurrent.futures
+from threading import Lock
 import io
 import logging
 import math
@@ -19,7 +20,7 @@ import threading
 import time
 import typing
 import urllib.parse
-
+read_lock = Lock
 if typing.TYPE_CHECKING:
     from librespot.core import Session
 
@@ -300,13 +301,14 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         return key
         
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
-        try:
-            key = self.get_key(gid, file_id, retry = True)
-            return key 
-        except Exception:
-            time.sleep(5)
-            key = self.get_key(gid, file_id, retry = True)
-            return key
+        with read_lock:
+             try:
+                 key = self.get_key(gid, file_id, retry = True)
+                 return key 
+             except Exception:
+                 time.sleep(5)
+                 key = self.get_key(gid, file_id, retry = True)
+                 return key
 
     class Callback:
 
