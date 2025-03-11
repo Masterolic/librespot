@@ -343,7 +343,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
               with self.__reference_lock:
                    while self.__reference.empty():  # Prevent spurious wake-ups
                         self.__reference_lock.wait(AudioKeyManager.audio_key_request_timeout)
-                        time.sleep(5)
+                 #       time.sleep(5)
                         if self.__reference.empty():
                        #    return None
                             raise Exception("Failed To receive key") # Return None if timeout happens
