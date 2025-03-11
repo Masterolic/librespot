@@ -21,10 +21,14 @@ import time
 import typing
 import urllib.parse
 read_lock = Lock()
+reading_pending = 0
 if typing.TYPE_CHECKING:
     from librespot.core import Session
 
 class ResourceNotAvailableError(Exception):
+    """Raised when the requested stream is unavailable from the API."""
+    pass
+class KeyUnavailableError(Exception):
     """Raised when the requested stream is unavailable from the API."""
     pass
     
@@ -294,21 +298,25 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         key = callback.wait_response()
         if key is None:
             if retry:
+                time.sleep(1)
                 return self.get_key(gid, file_id, False)
-            raise RuntimeError(
+            raise KeyUnavailableError(
                 "Failed fetching audio key! gid: {}, fileId: {}".format(
                     util.bytes_to_hex(gid), util.bytes_to_hex(file_id)))
         return key
         
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
+        global reading_pending 
+        reading_pending+=1
         with read_lock:
-             try:
+        #     try:
+                 reading_pending -= 1
                  key = self.get_key(gid, file_id, retry = True)
                  return key 
-             except Exception:
-                 time.sleep(5)
-                 key = self.get_key(gid, file_id, retry = True)
-                 return key
+           #  except Exception:
+            #     time.sleep(5)
+           #      key = self.get_key(gid, file_id, retry = True)
+          #       return key
 
     class Callback:
 
@@ -346,7 +354,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                  #       time.sleep(5)
                         if self.__reference.empty():
                        #    return None
-                            raise Exception("Failed To receive key") # Return None if timeout happens
+                            raise KeyUnavailableError("Failed To receive key") # Return None if timeout happens
                    return self.__reference.get(block=False)  # Get the item safely
 
 
