@@ -675,7 +675,7 @@ class DealerClient(Closeable):
                           )
                         self.close()
                         return
-                   self.__received_pong = False  # Reset for the next check
+                    self.__received_pong = False  # Reset for the next check
                                                           
                 # Schedule the ping check (after 3 seconds)
                 if hasattr(self, "__ping_check_event"):
