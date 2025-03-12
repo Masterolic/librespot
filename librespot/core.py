@@ -646,7 +646,7 @@ class DealerClient(Closeable):
             else:
                 raise RuntimeError("Unknown message type for {}".format(
                     typ.value))
-
+        
         def on_open(self, ws: websocket.WebSocketApp):
             """
 
@@ -659,47 +659,46 @@ class DealerClient(Closeable):
                     format(self.__closed))
             self.__dealer_client.logger.debug(
                 "Dealer connected! [url: {}]".format(self.__url))
+                
+        def anonymous():
+            """ Periodically send pings and check responses """
+            self.send_ping()
+            self.__received_pong = False
+                        
+            def anonymous2():
+                """ Checks if a pong was received; otherwise, reconnects """
+                if self.__last_scheduled_ping is None:
+                   return
+                if not self.__received_pong:
+                     self.__dealer_client.logger.warning(
+                     "Did not receive pong in 3 seconds. Reconnecting..."
+                         )
+                     self.close()
+                     return
+                self.__received_pong = False  # Reset for the next check
+                                          
+            # Schedule the ping check (after 3 seconds)
+            if hasattr(self, "__ping_check_event"):
+               self.__scheduler.cancel(self.__ping_check_event)  # Cancel old event
+            self.__ping_check_event = self.__scheduler.enter(3, 1, anonymous2)
 
-            def anonymous():
-                """ """
-                self.send_ping()
-                self.__received_pong = False
-
-                def anonymous2():
-                    """ """
-                    if self.__last_scheduled_ping is None:
-                        return
-                    if not self.__received_pong:
-                        self.__dealer_client.logger.warning(
-                            "Did not receive ping in 3 seconds. Reconnecting..."
-                        )
-                        self.close()
-                        return
-                    self.__received_pong = False
-
-                self.__scheduler.enter(3, 1, anonymous2)
-                self.__last_scheduled_ping = self.__scheduler.enter(
-                    30, 1, anonymous)
-
-            self.__last_scheduled_ping = self.__scheduler.enter(
-                30, 1, anonymous)
+            # Schedule the next ping (after 30 seconds)
+            if hasattr(self, "__last_scheduled_ping"):
+               self.__scheduler.cancel(self.__last_scheduled_ping)  # Prevent stacking
+            self.__last_scheduled_ping = self.__scheduler.enter(30, 1, anonymous)
+                
+        # Start the first scheduled ping
+        self.__last_scheduled_ping = self.__scheduler.enter(30, 1, anonymous)
 
         def send_ping(self):
-            """ """
+            """ Sends a ping message to the WebSocket server """
             self.__ws.send('{"type":"ping"}')
 
         def send_reply(self, key: str, result: DealerClient.RequestResult):
-            """
+            """ Sends a reply message based on the request result """
+            success = "true" if result == DealerClient.RequestResult.SUCCESS else "false"
+            self.__ws.send(f'{{"type":"reply","key":"{key}","payload":{{"success":{success}}}}}')
 
-            :param key: str:
-            :param result: DealerClient.RequestResult:
-
-            """
-            success = ("true" if result == DealerClient.RequestResult.SUCCESS
-                       else "false")
-            self.__ws.send(
-                '{"type":"reply","key":"%s","payload":{"success":%s}' %
-                (key, success))
 
     class RequestResult(enum.Enum):
         """ """
