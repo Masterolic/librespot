@@ -281,11 +281,11 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         json_data = json.loads(widejson[json_start:])
         return base64.b64decode(base64.urlsafe_b64encode(json_data.get("key_ids").pop(0).bytes))
 
-    def get_key(self, gid, file_id, retry = True):
+    def get_key(self, gid, file_id, retry=True):
         seq: int
         with self.__seq_holder_lock:
-            seq = self.__seq_holder
-            self.__seq_holder += 1
+             seq = self.__seq_holder
+             self.__seq_holder = (self.__seq_holder + 1) % (2**31)  # Prevent overflow
         out = io.BytesIO()
         out.write(file_id)
         out.write(gid)
@@ -295,28 +295,34 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         self.__session.send(Packet.Type.request_key, out.read())
         callback = AudioKeyManager.SyncCallback(self)
         self.__callbacks[seq] = callback
-        key = callback.wait_response()
-        if key is None:
-            if retry:
-                time.sleep(1)
-                return self.get_key(gid, file_id, False)
-            raise KeyUnavailableError(
+        try:
+            key = callback.wait_response()
+            if key is None:
+               if retry:
+                  time.sleep(1)
+                  return self.get_key(gid, file_id, False)
+               raise KeyUnavailableError(
                 "Failed fetching audio key! gid: {}, fileId: {}".format(
                     util.bytes_to_hex(gid), util.bytes_to_hex(file_id)))
-        return key
-        
+            return key
+        finally:
+             with self.__seq_holder_lock:
+                  self.__callbacks.pop(seq, None)  # Clean up the callback
+                
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
-        global reading_pending 
-        reading_pending+=1
-        with read_lock:
-        #     try:
-                 reading_pending -= 1
-                 key = self.get_key(gid, file_id, retry = True)
-                 return key 
-           #  except Exception:
-            #     time.sleep(5)
-           #      key = self.get_key(gid, file_id, retry = True)
-          #       return key
+        global reading_pending
+        reading_pending += 1
+        try:
+            with read_lock:
+                 key = self.get_key(gid, file_id, retry=retry)
+                 return key
+        except Exception as e:
+               if retry:
+                  time.sleep(0.5)
+                  return self.get_audio_key(gid, file_id, False)
+               raise KeyUnavailableError(f"Failed to fetch audio key: {e}")
+        finally:
+            reading_pending -= 1
 
     class Callback:
 
@@ -327,36 +333,33 @@ class AudioKeyManager(PacketsReceiver, Closeable):
             raise NotImplementedError
 
     class SyncCallback(Callback):
-          __audio_key_manager: AudioKeyManager
-          __reference = queue.Queue()
-          __reference_lock = threading.Condition()
-
           def __init__(self, audio_key_manager: AudioKeyManager):
               self.__audio_key_manager = audio_key_manager
+              self.__reference = queue.Queue()
+              self.__reference_lock = threading.Condition()
 
           def key(self, key: bytes) -> None:
               with self.__reference_lock:
                    self.__reference.put(key)
-                   self.__reference_lock.notify_all()  # Wake up waiting threads
+                   self.__reference_lock.notify_all()
 
           def error(self, code: int) -> None:
               if code != 2:
                  self.__audio_key_manager.logger.fatal(
-                 "Audio key error, code: {}".format(code))
+                    "Audio key error, code: {}".format(code))
               with self.__reference_lock:
                    self.__reference.put(None)
-                   self.__reference_lock.notify_all()  # Wake up waiting threads
+                   self.__reference_lock.notify_all()
 
           def wait_response(self) -> bytes:
               with self.__reference_lock:
-                   while self.__reference.empty():  # Prevent spurious wake-ups
-                        self.__reference_lock.wait(AudioKeyManager.audio_key_request_timeout)
-                 #       time.sleep(5)
-                        if self.__reference.empty():
-                       #    return None
-                            raise KeyUnavailableError("Failed To receive key") # Return None if timeout happens
-                   return self.__reference.get(block=False)  # Get the item safely
-
+                   start_time = time.time()
+                   while self.__reference.empty():
+                         remaining_time = AudioKeyManager.audio_key_request_timeout - (time.time() - start_time)
+                         if remaining_time <= 0:
+                            raise KeyUnavailableError("Failed to receive key: Timeout")
+                         self.__reference_lock.wait(remaining_time)
+                   return self.__reference.get(block=False)
 
 class CdnFeedHelper:
     _LOGGER: logging = logging.getLogger(__name__)
