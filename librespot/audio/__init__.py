@@ -9,7 +9,7 @@ from librespot.metadata import EpisodeId, PlayableId, TrackId
 from librespot.proto import Metadata_pb2 as Metadata, StorageResolve_pb2 as StorageResolve
 from librespot.structure import AudioDecrypt, AudioQualityPicker, Closeable, FeederException, GeneralAudioStream, GeneralWritableStream, HaltListener, NoopAudioDecrypt, PacketsReceiver
 import concurrent.futures
-from threading import Lock
+from threading import RLock
 import io
 import logging
 import math
@@ -20,7 +20,7 @@ import threading
 import time
 import typing
 import urllib.parse
-read_lock = Lock()
+read_lock = RLock()
 reading_pending = 0
 if typing.TYPE_CHECKING:
     from librespot.core import Session
@@ -352,14 +352,11 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                    self.__reference_lock.notify_all()
 
           def wait_response(self) -> bytes:
-              with self.__reference_lock:
-                   start_time = time.time()
-                   while self.__reference.empty():
-                         remaining_time = AudioKeyManager.audio_key_request_timeout - (time.time() - start_time)
-                         if remaining_time <= 0:
-                            raise KeyUnavailableError("Failed to receive key: Timeout")
-                         self.__reference_lock.wait(remaining_time)
-                   return self.__reference.get(block=False)
+              try:
+                   return self.__reference.get(block=True, timeout=3)  # Directly using timeout
+              except queue.Empty:
+                  raise KeyUnavailableError("Failed to receive key: Timeout")
+
 
 class CdnFeedHelper:
     _LOGGER: logging = logging.getLogger(__name__)
