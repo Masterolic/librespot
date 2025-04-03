@@ -21,6 +21,7 @@ import time
 import typing
 import urllib.parse
 read_lock = RLock()
+read_pending = RLock()
 reading_pending = 0
 if typing.TYPE_CHECKING:
     from librespot.core import Session
@@ -311,7 +312,8 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                 
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
         global reading_pending
-        reading_pending += 1
+        with read_pending:
+             reading_pending += 1
         try:
             with read_lock:
                  key = self.get_key(gid, file_id, retry=retry)
@@ -322,7 +324,8 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                   return self.get_audio_key(gid, file_id, False)
                raise KeyUnavailableError(f"Failed to fetch audio key: {e}")
         finally:
-            reading_pending -= 1
+            with read_pending:
+                 reading_pending -= 1
 
     class Callback:
 
