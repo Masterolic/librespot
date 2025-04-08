@@ -322,6 +322,8 @@ class AudioKeyManager(PacketsReceiver, Closeable):
                if retry:
                   time.sleep(0.5)
                   return self.get_audio_key(gid, file_id, False)
+               with read_pending:
+                    reading_pending -= 1
                raise KeyUnavailableError(f"Failed to fetch audio key: {e}")
         finally:
             with read_pending:
