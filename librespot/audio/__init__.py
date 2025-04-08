@@ -9,7 +9,7 @@ from librespot.metadata import EpisodeId, PlayableId, TrackId
 from librespot.proto import Metadata_pb2 as Metadata, StorageResolve_pb2 as StorageResolve
 from librespot.structure import AudioDecrypt, AudioQualityPicker, Closeable, FeederException, GeneralAudioStream, GeneralWritableStream, HaltListener, NoopAudioDecrypt, PacketsReceiver
 import concurrent.futures
-from threading import RLock
+from threading import RLock, Lock
 import io
 import logging
 import math
@@ -21,7 +21,7 @@ import time
 import typing
 import urllib.parse
 read_lock = RLock()
-read_pending = RLock()
+read_pending = Lock()
 reading_pending = 0
 if typing.TYPE_CHECKING:
     from librespot.core import Session
