@@ -281,7 +281,7 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         # Parse the JSON object
         json_data = json.loads(widejson[json_start:])
         return base64.b64decode(base64.urlsafe_b64encode(json_data.get("key_ids").pop(0).bytes))
-
+    
     def get_key(self, gid, file_id, retry=True):
         seq: int
         with self.__seq_holder_lock:
@@ -309,25 +309,25 @@ class AudioKeyManager(PacketsReceiver, Closeable):
         finally:
              with self.__seq_holder_lock:
                   self.__callbacks.pop(seq, None)  # Clean up the callback
-                
+                    
     def get_audio_key(self, gid: bytes, file_id: bytes, retry: bool = True) -> bytes:
         global reading_pending
         with read_pending:
              reading_pending += 1
         try:
-            with read_lock:
-                 key = self.get_key(gid, file_id, retry=retry)
-                 return key
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                 future = executor.submit(self.get_key, gid, file_id, retry=retry)
+                 return future.result(timeout=5)  # seconds
+        except concurrent.futures.TimeoutError:
+             raise KeyUnavailableError("get_key() timed out")
         except Exception as e:
                if retry:
                   time.sleep(0.5)
                   return self.get_audio_key(gid, file_id, False)
-               with read_pending:
-                    reading_pending -= 1
                raise KeyUnavailableError(f"Failed to fetch audio key: {e}")
         finally:
-            with read_pending:
-                 reading_pending -= 1
+                with read_pending:
+                     reading_pending -= 1
 
     class Callback:
 
