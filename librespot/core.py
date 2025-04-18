@@ -1223,8 +1223,13 @@ class Session(Closeable, MessageListener, SubListener):
     def reconnect(self) -> None:
         """Reconnect to the Spotify Server"""
         if self.connection is not None:
-            self.connection.close()
+            try:
+                self.connection.close()
+            except Exception as e:
+                self.logger.error("librespot failed to close connection due to: %s", e)   
             self.__receiver.stop()
+        if self.__receiver is not None:
+           self.__receiver.stop() 
         self.connection = Session.ConnectionHolder.create(
             ApResolver.get_random_accesspoint(), self.__inner.conf)
         self.connect()
