@@ -2028,7 +2028,6 @@ class Session(Closeable, MessageListener, SubListener):
                     if cmd == Packet.Type.ping:
                        if self.__session.scheduled_reconnect is not None:
                           self.__session.scheduler.cancel(self.__session.scheduled_reconnect)
-
                        def anonymous():
                            self.__session.logger.warning("Socket timed out. Reconnecting...")
                            self.__session.reconnect()
@@ -2036,13 +2035,12 @@ class Session(Closeable, MessageListener, SubListener):
                            2 * 60 + 5, 1, anonymous
                            )
                        self.__session.send(Packet.Type.pong, packet.payload)
-
-                   elif cmd == Packet.Type.pong_ack:
+                    elif cmd == Packet.Type.pong_ack:
                         continue
-                   elif cmd == Packet.Type.country_code:
+                    elif cmd == Packet.Type.country_code:
                         self.__session.__country_code = packet.payload.decode()
                         self.__session.logger.info(f"Received country_code: {self.__session.__country_code}")
-                   elif cmd == Packet.Type.license_version:
+                    elif cmd == Packet.Type.license_version:
                         license_version = io.BytesIO(packet.payload)
                         license_id = struct.unpack(">h", license_version.read(2))[0]
                         if license_id != 0:
@@ -2050,9 +2048,9 @@ class Session(Closeable, MessageListener, SubListener):
                            self.__session.logger.info(f"Received license_version: {license_id}, {buffer.decode()}")
                         else:
                              self.__session.logger.info(f"Received license_version: {license_id}")
-                   elif cmd == Packet.Type.unknown_0x10:
+                    elif cmd == Packet.Type.unknown_0x10:
                         self.__session.logger.debug(f"Received 0x10: {util.bytes_to_hex(packet.payload)}")
-                   elif cmd in [
+                    elif cmd in [
                        Packet.Type.mercury_sub,
                        Packet.Type.mercury_unsub,
                        Packet.Type.mercury_event,
@@ -2060,14 +2058,14 @@ class Session(Closeable, MessageListener, SubListener):
                        ]:
                        self.__session.mercury().dispatch(packet)
 
-                   elif cmd in [Packet.Type.aes_key, Packet.Type.aes_key_error]:
+                    elif cmd in [Packet.Type.aes_key, Packet.Type.aes_key_error]:
                         self.__session.audio_key().dispatch(packet)
 
-                   elif cmd in [Packet.Type.channel_error, Packet.Type.stream_chunk_res]:
+                    elif cmd in [Packet.Type.channel_error, Packet.Type.stream_chunk_res]:
                         self.__session.channel().dispatch(packet)
-                   elif cmd == Packet.Type.product_info:
+                    elif cmd == Packet.Type.product_info:
                         self.__session.parse_product_info(packet.payload)
-                   else:
+                    else:
                         self.__session.logger.info(f"Skipping {util.bytes_to_hex(cmd)}")
 
     class SpotifyAuthenticationException(Exception):
