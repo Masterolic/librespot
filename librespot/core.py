@@ -1953,7 +1953,7 @@ class Session(Closeable, MessageListener, SubListener):
 
             """
             self.write(struct.pack(">h", data))
-
+    
     class Inner:
         """ """
         device_type: Connect.DeviceType = None
@@ -1976,105 +1976,94 @@ class Session(Closeable, MessageListener, SubListener):
             self.device_name = device_name
             self.device_id = (device_id if device_id is not None else
                               util.random_hex_string(40))
-
+    
     class Receiver:
-        """ """
-        __session: Session
-        __thread: threading.Thread
-        __running: bool = True
+          """Receives packets from the session's encrypted socket."""
+    
+          __session: 'Session'
+          __thread: threading.Thread
+          __stop_event: threading.Event
 
-        def __init__(self, session):
-            self.__session = session
-            self.__thread = threading.Thread(target=self.run)
-            self.__thread.daemon = True
-            self.__thread.name = "session-packet-receiver"
-            self.__thread.start()
+          def __init__(self, session):
+              self.__session = session
+              self.__stop_event = threading.Event()
 
-        def stop(self) -> None:
-            """ """
-            self.__running = False
+              self.__thread = threading.Thread(
+              target=self.run,
+              name="session-packet-receiver",
+              daemon=True
+                   )
+              self.__thread.start()
 
-        def run(self) -> None:
-            """Receive Packet thread function"""
-            self.__session.logger.info("Session.Receiver started")
-            while self.__running:
-                packet: Packet
-                cmd: bytes
-                try:
-                    packet = self.__session.cipher_pair.receive_encoded(
-                        self.__session.connection)
-                    cmd = Packet.Type.parse(packet.cmd)
-                    if cmd is None:
-                        self.__session.logger.info(
-                            "Skipping unknown command cmd: 0x{}, payload: {}".
-                            format(util.bytes_to_hex(packet.cmd),
-                                   packet.payload))
+          def stop(self) -> None:
+              """Signals the receiver to stop and waits for thread exit."""
+              self.__stop_event.set()
+              if self.__thread.is_alive():
+                 self.__thread.join(timeout=2)
+
+          def run(self) -> None:
+              """Receive Packet thread function"""
+              self.__session.logger.info("Session.Receiver started")
+              while not self.__stop_event.is_set():
+                    try:
+                        packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
+                        cmd = Packet.Type.parse(packet.cmd)
+                        if cmd is None:
+                           self.__session.logger.info(
+                           f"Skipping unknown command cmd: 0x{util.bytes_to_hex(packet.cmd)}, payload: {packet.payload}"
+                             )
+                           continue                          
+                    except (RuntimeError, OSError, ConnectionResetError) as ex:
+                        if not self.__stop_event.is_set():
+                           self.__session.logger.fatal(f"Failed reading packet! {ex}")
+                           self.__session.reconnect()
+                        break
+                    if self.__stop_event.is_set():
+                       break
+                    if cmd == Packet.Type.ping:
+                       if self.__session.scheduled_reconnect is not None:
+                          self.__session.scheduler.cancel(self.__session.scheduled_reconnect)
+
+                       def anonymous():
+                           self.__session.logger.warning("Socket timed out. Reconnecting...")
+                           self.__session.reconnect()
+                       self.__session.scheduled_reconnect = self.__session.scheduler.enter(
+                           2 * 60 + 5, 1, anonymous
+                           )
+                       self.__session.send(Packet.Type.pong, packet.payload)
+
+                   elif cmd == Packet.Type.pong_ack:
                         continue
-                except (RuntimeError, OSError, ConnectionResetError) as ex:
-                  #  if isinstance(ex, OSError):
-                  #     if ex.errno != errno.EBADF:
-                 #         raise
-                    if self.__running:
-                        self.__session.logger.fatal(
-                            "Failed reading packet! {}".format(ex))
-                        self.__session.reconnect()
-                    break
-                if not self.__running:
-                    break
-                if cmd == Packet.Type.ping:
-                    if self.__session.scheduled_reconnect is not None:
-                        self.__session.scheduler.cancel(
-                            self.__session.scheduled_reconnect)
+                   elif cmd == Packet.Type.country_code:
+                        self.__session.__country_code = packet.payload.decode()
+                        self.__session.logger.info(f"Received country_code: {self.__session.__country_code}")
+                   elif cmd == Packet.Type.license_version:
+                        license_version = io.BytesIO(packet.payload)
+                        license_id = struct.unpack(">h", license_version.read(2))[0]
+                        if license_id != 0:
+                           buffer = license_version.read()
+                           self.__session.logger.info(f"Received license_version: {license_id}, {buffer.decode()}")
+                        else:
+                             self.__session.logger.info(f"Received license_version: {license_id}")
+                   elif cmd == Packet.Type.unknown_0x10:
+                        self.__session.logger.debug(f"Received 0x10: {util.bytes_to_hex(packet.payload)}")
+                   elif cmd in [
+                       Packet.Type.mercury_sub,
+                       Packet.Type.mercury_unsub,
+                       Packet.Type.mercury_event,
+                       Packet.Type.mercury_req,
+                       ]:
+                       self.__session.mercury().dispatch(packet)
 
-                    def anonymous():
-                        """ """
-                        self.__session.logger.warning(
-                            "Socket timed out. Reconnecting...")
-                        self.__session.reconnect()
+                   elif cmd in [Packet.Type.aes_key, Packet.Type.aes_key_error]:
+                        self.__session.audio_key().dispatch(packet)
 
-                    self.__session.scheduled_reconnect = self.__session.scheduler.enter(
-                        2 * 60 + 5, 1, anonymous)
-                    self.__session.send(Packet.Type.pong, packet.payload)
-                elif cmd == Packet.Type.pong_ack:
-                    continue
-                elif cmd == Packet.Type.country_code:
-                    self.__session.__country_code = packet.payload.decode()
-                    self.__session.logger.info(
-                        "Received country_code: {}".format(
-                            self.__session.__country_code))
-                elif cmd == Packet.Type.license_version:
-                    license_version = io.BytesIO(packet.payload)
-                    license_id = struct.unpack(">h",
-                                               license_version.read(2))[0]
-                    if license_id != 0:
-                        buffer = license_version.read()
-                        self.__session.logger.info(
-                            "Received license_version: {}, {}".format(
-                                license_id, buffer.decode()))
-                    else:
-                        self.__session.logger.info(
-                            "Received license_version: {}".format(license_id))
-                elif cmd == Packet.Type.unknown_0x10:
-                    self.__session.logger.debug("Received 0x10: {}".format(
-                        util.bytes_to_hex(packet.payload)))
-                elif cmd in [
-                        Packet.Type.mercury_sub,
-                        Packet.Type.mercury_unsub,
-                        Packet.Type.mercury_event,
-                        Packet.Type.mercury_req,
-                ]:
-                    self.__session.mercury().dispatch(packet)
-                elif cmd in [Packet.Type.aes_key, Packet.Type.aes_key_error]:
-                    self.__session.audio_key().dispatch(packet)
-                elif cmd in [
-                        Packet.Type.channel_error, Packet.Type.stream_chunk_res
-                ]:
-                    self.__session.channel().dispatch(packet)
-                elif cmd == Packet.Type.product_info:
-                    self.__session.parse_product_info(packet.payload)
-                else:
-                    self.__session.logger.info("Skipping {}".format(
-                        util.bytes_to_hex(cmd)))
+                   elif cmd in [Packet.Type.channel_error, Packet.Type.stream_chunk_res]:
+                        self.__session.channel().dispatch(packet)
+                   elif cmd == Packet.Type.product_info:
+                        self.__session.parse_product_info(packet.payload)
+                   else:
+                        self.__session.logger.info(f"Skipping {util.bytes_to_hex(cmd)}")
 
     class SpotifyAuthenticationException(Exception):
         """ """
