@@ -2002,10 +2002,11 @@ class Session(Closeable, MessageListener, SubListener):
               self.__thread.start()
 
           def stop(self) -> None:
-              """Signals the receiver to stop and waits for thread exit."""
               self.__stop_event.set()
               if self.__thread.is_alive():
-                 self.__thread.join(timeout=2)
+                 self.__thread.join(timeout=7)
+                 if self.__thread.is_alive():
+                    self.__session.logger.warning("Receiver thread did not terminate cleanly.")
 
           def run(self) -> None:
               """Receive Packet thread function"""
@@ -2018,7 +2019,9 @@ class Session(Closeable, MessageListener, SubListener):
                            self.__session.logger.info(
                            f"Skipping unknown command cmd: 0x{util.bytes_to_hex(packet.cmd)}, payload: {packet.payload}"
                              )
-                           continue                          
+                           continue     
+                    except socket.timeout:
+                           continue
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
                            self.__session.logger.fatal(f"Failed reading packet! {ex}")
