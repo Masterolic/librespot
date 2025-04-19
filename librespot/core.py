@@ -1878,10 +1878,7 @@ class Session(Closeable, MessageListener, SubListener):
             ap_port = int(address.split(":")[1])
             sock = socket.socket()
             sock.settimeout(5)
-            try:
-                sock.connect((ap_address, ap_port))
-            except Exception:
-                sock.connect((ap_address, ap_port))
+            sock.connect((ap_address, ap_port))
             return Session.ConnectionHolder(sock)
 
         def close(self) -> None:
@@ -2017,7 +2014,7 @@ class Session(Closeable, MessageListener, SubListener):
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
-                        self.__session.connection.settimeout(2.0)
+                        self.__session.connection.settimeout(5)
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
                         if cmd is None:
@@ -2025,15 +2022,15 @@ class Session(Closeable, MessageListener, SubListener):
                            f"Skipping unknown command cmd: 0x{util.bytes_to_hex(packet.cmd)}, payload: {packet.payload}"
                              )
                            continue     
-                    except socket.timeout:
-                           continue
+               #     except socket.timeout:
+                        #   continue
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
                            self.__session.logger.fatal(f"Failed reading packet! {ex}")
                            self.__session.reconnect()
-                        break
+                        return 
                     if self.__stop_event.is_set():
-                       break
+                       return
                     if cmd == Packet.Type.ping:
                        if self.__session.scheduled_reconnect is not None:
                           self.__session.scheduler.cancel(self.__session.scheduled_reconnect)
