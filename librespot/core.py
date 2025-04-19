@@ -2020,6 +2020,7 @@ class Session(Closeable, MessageListener, SubListener):
                         if self.__thread.is_alive():
                            self.__session.logger.warning("Receiver thread did not terminate cleanly.")
               except Exception as e:
+                  print(e)
                   exit(e)
 
           def run(self) -> None:
@@ -2040,7 +2041,9 @@ class Session(Closeable, MessageListener, SubListener):
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
                            self.__session.logger.fatal(f"Failed reading packet! {ex}")
+                           self.stop()
                            self.__session.reconnect()
+                        self.stop()
                         return 
                     if self.__stop_event.is_set():
                        return
