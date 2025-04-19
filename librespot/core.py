@@ -2003,17 +2003,21 @@ class Session(Closeable, MessageListener, SubListener):
 
           def stop(self) -> None:
               self.__stop_event.set()
-              if hasattr(self, "__thread") and self.__thread.is_alive():
-                 if self.__thread.is_alive() and threading.current_thread() != self.__thread:
-                    self.__thread.join(timeout=7)
-                    if self.__thread.is_alive():
-                       self.__session.logger.warning("Receiver thread did not terminate cleanly.")
+              try:
+                  if hasattr(self, "__thread") and self.__thread.is_alive():
+                     if self.__thread.is_alive() and threading.current_thread() != self.__thread:
+                        self.__thread.join(timeout=7)
+                        if self.__thread.is_alive():
+                           self.__session.logger.warning("Receiver thread did not terminate cleanly.")
+              except Exception as e:
+                  exit(e)
 
           def run(self) -> None:
               """Receive Packet thread function"""
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
+                        self.__session.connection.settimeout(2.0)
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
                         if cmd is None:
