@@ -2036,8 +2036,8 @@ class Session(Closeable, MessageListener, SubListener):
                            f"Skipping unknown command cmd: 0x{util.bytes_to_hex(packet.cmd)}, payload: {packet.payload}"
                              )
                            continue     
-               #     except socket.timeout:
-                        #   continue
+                    except socket.timeout:
+                           continue
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
                            self.__session.logger.fatal(f"Failed reading packet! {ex}")
