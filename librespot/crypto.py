@@ -65,8 +65,8 @@ class CipherPair:
             if mac != expected_mac:
                 raise RuntimeError()
             return Packet(cmd, payload_bytes)
-        except (IndexError, OSError):
-            raise RuntimeError("Failed to receive packet")
+        except (IndexError, OSError) as ex:
+            raise RuntimeError("Failed to receive packet due to %s", repr(ex))
 
 
 class DiffieHellman:
