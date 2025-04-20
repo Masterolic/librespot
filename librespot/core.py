@@ -1895,10 +1895,12 @@ class Session(Closeable, MessageListener, SubListener):
             try:
                 sock.connect((ap_address, ap_port))
             except Exception:
+                address = ApResolver.get_random_accesspoint()
+                ap_address = address.split(":")[0]
+                ap_port = int(address.split(":")[1])
                 sock.connect((ap_address, ap_port))
             return Session.ConnectionHolder(sock)
-            sock.connect((ap_address, ap_port))
-
+    
         def close(self) -> None:
             """Close the connection"""
             self.__socket.close()
