@@ -2041,10 +2041,10 @@ class Session(Closeable, MessageListener, SubListener):
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
                            self.__session.logger.fatal(f"Failed reading packet! {repr(ex)}")
-                     #      self.stop()
+                           self.stop()
                            self.__session.reconnect()
-                 #       self.stop()
-                        break 
+                        self.stop()
+                        return  
                     if self.__stop_event.is_set():
                        return
                     if cmd == Packet.Type.ping:
