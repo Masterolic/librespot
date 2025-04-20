@@ -55,7 +55,7 @@ class CipherPair:
         try:
             prev_timeout = connection.get_timeout()
             print(prev_timeout)
-            connection.set_timeout(60)
+            connection.set_timeout(3*60)
             print(connection.get_timeout())
             self.__receive_cipher.nonce(self.__receive_nonce)
             self.__receive_nonce += 1
