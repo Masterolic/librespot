@@ -1892,8 +1892,13 @@ class Session(Closeable, MessageListener, SubListener):
             ap_port = int(address.split(":")[1])
             sock = socket.socket()
             sock.settimeout(9)
-            sock.connect((ap_address, ap_port))
+            sock = socket.socket()
+            try:
+                sock.connect((ap_address, ap_port))
+            except Exception:
+                sock.connect((ap_address, ap_port))
             return Session.ConnectionHolder(sock)
+            sock.connect((ap_address, ap_port))
 
         def close(self) -> None:
             """Close the connection"""
