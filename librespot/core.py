@@ -1891,7 +1891,7 @@ class Session(Closeable, MessageListener, SubListener):
             ap_address = address.split(":")[0]
             ap_port = int(address.split(":")[1])
             sock = socket.socket()
-            sock.settimeout(5)
+            sock.settimeout(9)
             sock.connect((ap_address, ap_port))
             return Session.ConnectionHolder(sock)
 
@@ -2028,9 +2028,9 @@ class Session(Closeable, MessageListener, SubListener):
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
-                        print(f"{self.__session.connection.get_timeout()} seconds timeout")
-                        self.__session.connection.set_timeout(60)
-                        print(f"{self.__session.connection.get_timeout()} seconds timeout")
+                  #      print(f"{self.__session.connection.get_timeout()} seconds timeout")
+                        self.__session.connection.set_timeout(3*60)
+                #        print(f"{self.__session.connection.get_timeout()} seconds timeout")
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
                         if cmd is None:
