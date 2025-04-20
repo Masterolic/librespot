@@ -70,7 +70,8 @@ class CipherPair:
         except (IndexError, OSError):
             raise RuntimeError("Failed to receive packet")
         finally:
-              connection.set_timeout(prev_timeout)
+              pass
+           #   connection.set_timeout(prev_timeout)
 
 
 class DiffieHellman:
