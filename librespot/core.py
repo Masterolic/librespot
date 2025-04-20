@@ -2028,7 +2028,7 @@ class Session(Closeable, MessageListener, SubListener):
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
-                        print(f"\n\n\n {self.__session.connection.get_timeout()}")
+                        print(f"{self.__session.connection.get_timeout()} seconds timeout")
                    #     self.__session.connection.set_timeout(5)
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
