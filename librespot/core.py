@@ -1890,7 +1890,7 @@ class Session(Closeable, MessageListener, SubListener):
             """
             ap_address = address.split(":")[0]
             ap_port = int(address.split(":")[1])
-            sock = socket.socket(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(9)
             try:
                 sock.connect((ap_address, 443))
