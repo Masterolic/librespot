@@ -67,8 +67,8 @@ class CipherPair:
             if mac != expected_mac:
                 raise RuntimeError()
             return Packet(cmd, payload_bytes)
-        except (IndexError, OSError):
-            raise RuntimeError("Failed to receive packet")
+        except (IndexError, OSError) as e:
+            raise RuntimeError("Failed to receive packet due to %s", repr(e))
         finally:
              # pass
               connection.set_timeout(prev_timeout)
