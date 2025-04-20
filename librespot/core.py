@@ -1892,7 +1892,6 @@ class Session(Closeable, MessageListener, SubListener):
             ap_port = int(address.split(":")[1])
             sock = socket.socket()
             sock.settimeout(9)
-            sock = socket.socket()
             try:
                 sock.connect((ap_address, ap_port))
             except Exception:
