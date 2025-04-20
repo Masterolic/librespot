@@ -1936,13 +1936,8 @@ class Session(Closeable, MessageListener, SubListener):
             return struct.unpack(">h", self.read(2))[0]
 
         def set_timeout(self, seconds: float) -> None:
-            """Set socket's timeout
-
-            :param seconds: Number of seconds until timeout
-            :param seconds: float:
-
-            """
-            self.__socket.settimeout(seconds)
+            """Set socket's timeout"""
+            self.__socket.settimeout(None if seconds == 0 else seconds)
 
         def write(self, data: bytes) -> None:
             """Write data to buffer
