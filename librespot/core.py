@@ -1929,7 +1929,7 @@ class Session(Closeable, MessageListener, SubListener):
 
         def get_timeout(self):
             """ get socket timeout """
-            returnb self.__socket.gettimeout()
+            return self.__socket.gettimeout()
             
 
         def write(self, data: bytes) -> None:
