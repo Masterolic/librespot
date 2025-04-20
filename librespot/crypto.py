@@ -54,7 +54,7 @@ class CipherPair:
         """
         try:
             prev_timeout = connection.get_timeout()
-            print(prev_timeout, "recv encode timeout)
+            print(prev_timeout, "recv encode timeout")
        #     connection.set_timeout(3*60)
         #    print(connection.get_timeout())
             self.__receive_cipher.nonce(self.__receive_nonce)
