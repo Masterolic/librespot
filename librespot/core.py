@@ -1939,6 +1939,10 @@ class Session(Closeable, MessageListener, SubListener):
             """Set socket's timeout"""
             self.__socket.settimeout(None if seconds == 0 else seconds)
 
+        def get_timeout(self):
+            """ get socket timeout """
+            return self.__socket.gettimeout()
+
         def write(self, data: bytes) -> None:
             """Write data to buffer
 
@@ -2024,7 +2028,7 @@ class Session(Closeable, MessageListener, SubListener):
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
-                        print(f"\n\n\n {self.__session.connection.__socket.gettimeout()}")
+                        print(f"\n\n\n {self.__session.connection.get_timeout()}")
                    #     self.__session.connection.set_timeout(5)
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
