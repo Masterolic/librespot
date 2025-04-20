@@ -53,7 +53,7 @@ class CipherPair:
             The parsed packet will be returned
         """
         try:
-            prev_timeout = connection.__socket.gettimeout())
+            prev_timeout = connection.__socket.gettimeout()
             connection.set_timeout(5)
             self.__receive_cipher.nonce(self.__receive_nonce)
             self.__receive_nonce += 1
