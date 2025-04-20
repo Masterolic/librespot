@@ -53,6 +53,8 @@ class CipherPair:
             The parsed packet will be returned
         """
         try:
+            prev_timeout = connection.__socket.gettimeout())
+            connection.set_timeout(5)
             self.__receive_cipher.nonce(self.__receive_nonce)
             self.__receive_nonce += 1
             header_bytes = self.__receive_cipher.decrypt(connection.read(3))
@@ -67,6 +69,8 @@ class CipherPair:
             return Packet(cmd, payload_bytes)
         except (IndexError, OSError):
             raise RuntimeError("Failed to receive packet")
+        finally:
+              connection.set_timeout(prev_timeout)
 
 
 class DiffieHellman:
