@@ -2028,7 +2028,7 @@ class Session(Closeable, MessageListener, SubListener):
               self.__session.logger.info("Session.Receiver started")
               while not self.__stop_event.is_set():
                     try:
-                        self.__session.connection.set_timeout(5)
+                   #     self.__session.connection.set_timeout(5)
                         packet = self.__session.cipher_pair.receive_encoded(self.__session.connection)
                         cmd = Packet.Type.parse(packet.cmd)
                         if cmd is None:
