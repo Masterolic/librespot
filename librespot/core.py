@@ -1942,7 +1942,7 @@ class Session(Closeable, MessageListener, SubListener):
             :param seconds: float:
 
             """
-            self.__socket.settimeout(None if seconds == 0 else seconds)
+            self.__socket.settimeout(seconds)
 
         def write(self, data: bytes) -> None:
             """Write data to buffer
