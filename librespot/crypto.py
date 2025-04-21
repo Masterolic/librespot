@@ -66,6 +66,7 @@ class CipherPair:
                 raise RuntimeError()
             return Packet(cmd, payload_bytes)
         except (IndexError, OSError) as ex:
+            traceback.print_exc()
             raise RuntimeError("Failed to receive packet due to %s", repr(ex))
 
 
