@@ -53,9 +53,10 @@ class CipherPair:
         Return:
             The parsed packet will be returned
         """
-        stack = traceback.extract_stack()
-        for frame in stack:
-            print(f"File: {frame.filename}, Line: {frame.lineno}, in {frame.name}")
+        stack = inspect.stack()
+        print("Called from:")
+        for frame in stack[1:4]:  # skip current function, limit for readability
+            print(f"File: {frame.filename}, Line: {frame.lineno}, in {frame.function}")
         try:
             self.__receive_cipher.nonce(self.__receive_nonce)
             self.__receive_nonce += 1
