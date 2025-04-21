@@ -68,7 +68,7 @@ class CipherPair:
             return Packet(cmd, payload_bytes)
         except (IndexError, OSError) as ex:
             print("Traceback (caller stack):")
-            print("".join(traceback.format_stack()))
+            print("".join(traceback.format_exc()))
             raise RuntimeError("Failed to receive packet due to %s", repr(ex)) from ex
 
 
