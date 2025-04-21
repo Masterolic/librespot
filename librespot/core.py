@@ -1893,7 +1893,7 @@ class Session(Closeable, MessageListener, SubListener):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(9)
             try:
-                sock.connect((ap_address, 443))
+                sock.connect((ap_address, ap_port))
             except Exception:
                 address = ApResolver.get_random_accesspoint()
                 ap_address = address.split(":")[0]
