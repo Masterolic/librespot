@@ -5,6 +5,7 @@ import io
 import re
 import struct
 import typing
+import traceback
 
 if typing.TYPE_CHECKING:
     from librespot.core import Session
