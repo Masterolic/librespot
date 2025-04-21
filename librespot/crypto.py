@@ -68,7 +68,7 @@ class CipherPair:
             return Packet(cmd, payload_bytes)
         except (IndexError, OSError) as ex:
             traceback.print_exc()
-            raise RuntimeError("Failed to receive packet due to %s", repr(ex)) from e
+            raise RuntimeError("Failed to receive packet due to %s", repr(ex)) from ex
 
 
 class DiffieHellman:
