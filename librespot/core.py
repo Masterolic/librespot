@@ -2047,7 +2047,7 @@ class Session(Closeable, MessageListener, SubListener):
                            continue
                     except (RuntimeError, OSError, ConnectionResetError) as ex:
                         if not self.__stop_event.is_set():
-                           self.__session.logger.fatal(f"Failed reading packet! {repr(ex)}")
+                           self.__session.logger.fatal(f"Failed reading packet run! {repr(ex)}", exc_info=True)
                            self.__session.reconnect()
                         return  
                     if self.__stop_event.is_set():
