@@ -55,9 +55,6 @@ class CipherPair:
             The parsed packet will be returned
         """
         stack = inspect.stack()
-        print("Called from:")
-        for frame in stack[1:4]:  # skip current function, limit for readability
-            print(f"File: {frame.filename}, Line: {frame.lineno}, in {frame.function}")
         try:
             self.__receive_cipher.nonce(self.__receive_nonce)
             self.__receive_nonce += 1
@@ -72,6 +69,9 @@ class CipherPair:
                 raise RuntimeError()
             return Packet(cmd, payload_bytes)
         except (IndexError, OSError) as e:
+              print("Called from:")
+              for frame in stack[1:4]:  # skip current function, limit for readability
+                  print(f"File: {frame.filename}, Line: {frame.lineno}, in {frame.function}")
               raise RuntimeError("Failed to receive packet") from e
 
 class DiffieHellman:
